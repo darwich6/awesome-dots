@@ -194,6 +194,7 @@
 
     # Development Tools
     git
+    delta
     direnv
     nodejs_24
     python315
