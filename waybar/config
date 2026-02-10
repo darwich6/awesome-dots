@@ -1,0 +1,79 @@
+{
+  "layer": "top",
+  "position": "top",
+  "reload_style_on_change": true,
+
+  "modules-left": ["clock", "tray"],
+  "modules-center": ["hyprland/workspaces"],
+  "modules-right": ["cpu", "memory", "temperature", "network", "pulseaudio"],
+
+  "clock": {
+    "format": "{:%I:%M:%S %p} ",
+    "interval": 1,
+    "tooltip-format": "<tt>{calendar}</tt>",
+    "calendar": {
+      "format": {
+        "today": "<span color='#fAfBfC'><b>{}</b></span>"
+      }
+    }
+  },
+
+  "hyprland/workspaces": {
+    "format": "{icon}",
+    "format-icons": {
+      "active": "",
+      "default": "",
+      "empty": ""
+    },
+    "persistent-workspaces": {
+      "*": 5
+    }
+  },
+
+  "network": {
+    "format-wifi": "",
+    "format-ethernet": "",
+    "format-disconnected": "",
+    "tooltip-format-wifi": "{essid} ({signalStrength}%) ",
+    "tooltip-format-ethernet": "{ifname} 🖧 "
+  },
+
+  "pulseaudio": {
+    "format": "{volume}% {icon}",
+    "format-bluetooth": "{volume}% {icon}",
+    "format-muted": "",
+    "format-icons": {
+      "headphone": "",
+      "hands-free": "",
+      "headset": "",
+      "phone": "",
+      "phone-muted": "",
+      "portable": "",
+      "car": "",
+      "default": ["", ""]
+    },
+    "scroll-step": 1,
+    "on-click": "pavucontrol"
+  },
+
+  "cpu": {
+    "format": "󰻠 {usage}%",
+    "tooltip": true
+  },
+
+  "memory": {
+    "format": " {percentage}%",
+    "tooltip": true
+  },
+
+  "temperature": {
+    "critical-threshold": 80,
+    "format": " {temperatureC}°C",
+    "tooltip": true
+  },
+
+  "tray": {
+    "icon-size": 14,
+    "spacing": 10
+  }
+}
