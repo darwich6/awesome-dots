@@ -1,26 +1,33 @@
 # Edit this configuration file to define what should be installed on
-# your system.  Help is available in the configuration.nix(5) man pag
-# and in the NixOS manual (accessible by running 'nixos-help').
 
-{ config, lib, pkgs, ... }:
+# your system.  Help is available in the configuration.nix(5) man page
+# and in the NixOS manual (accessible by running ‘nixos-help’).
 
 {
-  # =================================================================
-  # IMPORTS
-  # =================================================================
+  config,
+  lib,
+  pkgs,
+  inputs,
+  ...
+}:
+
+{
+  # Hostname / Networking
+  networking.hostName = "homepc"; # Define your hostname.
+  networking.networkmanager.enable = true;
+  networking.nameservers = [ "1.1.1.1" ];
+  networking.networkmanager.insertNameservers = [ "1.1.1.1" ];
+
+  # Imports
   imports = [
+    # Include the results of the hardware scan.
     ./hardware-configuration.nix
-    <home-manager/nixos>
   ];
 
-  # =================================================================
-  # SYSTEM SETTINGS
-  # =================================================================
-  system.stateVersion = "25.11";
-
-  # Allow unfree packages
+  # Nix Settings
   nixpkgs.config.allowUnfree = true;
-  nixpkgs.config.allowUnfreePredicate = pkg:
+  nixpkgs.config.allowUnfreePredicate =
+    pkg:
     builtins.elem (lib.getName pkg) [
       "steam"
       "steam-original"
@@ -29,10 +36,12 @@
       "1password-gui"
       "1password"
     ];
+  nix.settings.experimental-features = [
+    "nix-command"
+    "flakes"
+  ];
 
-  # =================================================================
-  # BOOT & KERNEL
-  # =================================================================
+  # Bootloader.
   boot.loader.systemd-boot.enable = false;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.grub.efiSupport = true;
@@ -40,17 +49,98 @@
   boot.loader.grub.enable = true;
   boot.loader.grub.configurationLimit = 5;
   boot.loader.grub.useOSProber = true;
-  boot.kernelPackages = pkgs.linuxPackages_latest;
+  boot.loader.grub2-theme = {
+    enable = true;
+    theme = "vimix";
+    footer = true;
+    screen = "2k";
+  };
 
-  # =================================================================
-  # NETWORKING
-  # =================================================================
-  networking.hostName = "homepc";
-  networking.networkmanager.enable = true;
+  # Audio
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    pulse.enable = true;
+    wireplumber.enable = true;
+  };
 
-  # =================================================================
-  # INTERNATIONALIZATION
-  # =================================================================
+  # Fonts
+  fonts.fontconfig.enable = true;
+  fonts.packages =
+    with pkgs;
+    [
+      nerd-fonts.symbols-only
+      nerd-fonts.fira-code
+      font-awesome
+      fira-code
+      fira-code-symbols
+      noto-fonts
+      noto-fonts-cjk-sans
+      noto-fonts-color-emoji
+      liberation_ttf
+      mplus-outline-fonts.githubRelease
+      dina-font
+      proggyfonts
+      dejavu_fonts
+    ]
+    ++ builtins.filter lib.attrsets.isDerivation (builtins.attrValues pkgs.nerd-fonts);
+
+  # Display Drivers
+  services.xserver.videoDrivers = [ "nvidia" ];
+  services.xserver.xkb = {
+    layout = "us";
+    variant = "";
+  };
+  hardware.graphics = {
+    enable = true;
+  };
+  hardware.nvidia = {
+    modesetting.enable = true;
+    open = true;
+    nvidiaSettings = true;
+    package = config.boot.kernelPackages.nvidiaPackages.stable;
+  };
+
+  # Docker env
+  virtualisation.docker.enable = true;
+
+  # Programs
+  programs.waybar.enable = true;
+  programs.steam = {
+    enable = true;
+    remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
+    dedicatedServer.openFirewall = true; # Open ports in the firewall for Source Dedicated Server
+    localNetworkGameTransfers.openFirewall = true; # Open ports in the firewall for Steam Local Network Game Transfers
+  };
+  programs._1password.enable = true;
+  programs._1password-gui = {
+    enable = true;
+    polkitPolicyOwners = [ "ahmed" ];
+  };
+  programs.hyprland = {
+    enable = true;
+    withUWSM = true;
+    xwayland.enable = true;
+  };
+  programs.neovim = {
+    enable = true;
+    defaultEditor = true;
+  };
+
+  programs.zsh = {
+    enable = true;
+  };
+  programs.zsh.ohMyZsh = {
+    enable = true;
+    custom = "$HOME/.oh-my-zsh/custom/";
+    theme = "powerlevel10k/powerlevel10k";
+  };
+  programs.dconf.enable = true;
+  programs.dconf.profiles.user.databases = [
+    { settings."org/gnome/desktop/interface".color-scheme = "prefer-dark"; }
+  ];
+
+  # TZ / Keyboard
   time.timeZone = "America/Chicago";
   i18n.defaultLocale = "en_US.UTF-8";
   i18n.extraLocaleSettings = {
@@ -65,149 +155,54 @@
     LC_TIME = "en_US.UTF-8";
   };
 
-  # =================================================================
-  # HARDWARE
-  # =================================================================
-  hardware.graphics.enable = true;
-  hardware.nvidia = {
-    modesetting.enable = true;
-    open = true;
-    nvidiaSettings = true;
-    package = config.boot.kernelPackages.nvidiaPackages.stable;
+  # Define a user account. Don't forget to set a password with ‘passwd’.
+  users.extraUsers.ahmed = {
+    shell = pkgs.zsh;
   };
-  services.xserver.videoDrivers = [ "nvidia" ];
-  services.xserver.xkb = {
-    layout = "us";
-    variant = "";
-  };
-
-  # =================================================================
-  # SERVICES
-  # =================================================================
-  services.pipewire = {
-    enable = true;
-    alsa.enable = true;
-    pulse.enable = true;
-    wireplumber.enable = true;
-  };
-
-  virtualisation.docker.enable = true;
-
-  # =================================================================
-  # FONTS
-  # =================================================================
-  fonts.fontconfig.enable = true;
-  fonts.packages = with pkgs; [
-    nerd-fonts.symbols-only
-    font-awesome
-    fira-code
-    fira-code-symbols
-    noto-fonts
-  ];
-
-  # =================================================================
-  # PROGRAMS
-  # =================================================================
-  programs.neovim = {
-    enable = true;
-    defaultEditor = true;
-  };
-
-  programs.zsh = {
-    enable = true;
-    ohMyZsh = {
-      enable = true;
-      custom = "$HOME/.oh-my-zsh/custom/";
-    };
-  };
-
-  programs.hyprland = {
-    enable = true;
-    withUWSM = true;
-    xwayland.enable = true;
-  };
-
-  programs.waybar.enable = true;
-
-  programs.steam = {
-    enable = true;
-    remotePlay.openFirewall = true;
-    dedicatedServer.openFirewall = true;
-    localNetworkGameTransfers.openFirewall = true;
-  };
-
-  programs._1password.enable = true;
-  programs._1password-gui = {
-    enable = true;
-    polkitPolicyOwners = [ "ahmed" ];
-  };
-
-  # =================================================================
-  # USERS
-  # =================================================================
-  users.extraUsers.ahmed = { shell = pkgs.zsh; };
   users.users.ahmed = {
     isNormalUser = true;
     description = "ahmed";
-    extraGroups = [ "networkmanager" "wheel" "docker" ];
+    extraGroups = [
+      "networkmanager"
+      "wheel"
+      "docker"
+    ];
   };
 
-  # =================================================================
-  # HOME MANAGER
-  # =================================================================
-  home-manager.users.ahmed = { pkgs, ... }: {
-    home.stateVersion = "25.11";
-
-    home.pointerCursor = {
-      name = "Adwaita";
-      package = pkgs.adwaita-icon-theme;
-      size = 24;
+  home-manager.users.ahmed =
+    { pkgs, ... }:
+    {
+      home.pointerCursor = {
+        name = "Adwaita";
+        package = pkgs.adwaita-icon-theme;
+        size = 24;
+      };
+      wayland.windowManager.hyprland.enable = true;
+      home.sessionVariables.NIXOS_OZONE_WL = "1";
+      programs.ghostty.enable = true;
+      programs.firefox.enable = true;
+      wayland.windowManager.hyprland.systemd.enable = false;
+      home.stateVersion = "25.11";
     };
 
-    wayland.windowManager.hyprland = {
-      enable = true;
-      systemd.enable = false;
-    };
-
-    programs.ghostty.enable = true;
-    programs.firefox.enable = true;
-
-    programs.zsh.initExtra = ''
-      [[ ! -f ~/.aliases.zsh ]] || source ~/.aliases.zsh
-    '';
-
-    home.sessionVariables = {
-      NIXOS_OZONE_WL = "1";
-      EDITOR = "nvim";
-      VISUAL = "nvim";
-      SUDO_EDITOR = "nvim";
-    };
-  };
-
-  # =================================================================
-  # SYSTEM PACKAGES
-  # =================================================================
+  # List packages installed in system profile. To search, run:
+  # $ nix search wget
   environment.systemPackages = with pkgs; [
-    # Editors
+    spotify
+    discord
     vim
-    neovim
-
-    # Development Tools
     git
-    delta
-    direnv
+    adwaita-icon-theme
+    zsh-powerlevel10k
+    meslo-lgs-nf
     nodejs_24
-    python315
-    lua
-    gcc
-    rustup
-    tree-sitter
-
-    # Go Tools
+    direnv
     go
     gopls
     uv
     golines
+    iferr
+    gotools
     gotests
     richgo
     reftools
@@ -218,56 +213,47 @@
     impl
     govulncheck
     mockgen
-
-    # Shell & Terminal
-    zsh
+    python315
+    lua
+    gcc
+    unzip
+    wget
+    rustup
+    ripgrep
+    wofi
+    keychain
     oh-my-zsh
     eza
     fzf
     fd
     gnugrep
-    ripgrep
-    keychain
-    wl-clipboard
-
-    # System Utilities
-    unzip
-    wget
     neofetch
-
-    # Wayland/Hyprland Tools
-    wofi
     hyprshot
-    wpaperd
     hyprpicker
     swaynotificationcenter
     hyprpolkitagent
+    bun
+    obsidian
+    piper
+    libratbag
+    jq
+    libnotify
+    just
+    prismlauncher
+    host
+    dig
+    google-chrome
+    luajitPackages.luarocks_bootstrap
+    ffmpeg
+    yazi
+    delta
+    wl-clipboard
     hyprpaper
-
-    # Applications
-    spotify
-    discord
     code-cursor
-
-    # Themes & Icons
-    adwaita-icon-theme
-    meslo-lgs-nf
   ];
+  environment.sessionVariables = {
+    NIXOS_OZONE_WL = "1";
+  };
 
-  # =================================================================
-  # UNUSED / COMMENTED OPTIONS
-  # =================================================================
-  # networking.wireless.enable = true;
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
-  # programs.mtr.enable = true;
-  # programs.gnupg.agent = {
-  #   enable = true;
-  #   enableSSHSupport = true;
-  # };
-  # services.openssh.enable = true;
-  # networking.firewall.allowedTCPPorts = [ ... ];
-  # networking.firewall.allowedUDPPorts = [ ... ];
-  # networking.firewall.enable = false;
+  system.stateVersion = "25.11"; # Did you read the comment?
 }
-
