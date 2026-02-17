@@ -5,7 +5,7 @@
     # NixOS official package source, using the nixos-25.11 branch here
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
     grub2-themes.url = "github:vinceliuice/grub2-themes";
-    nixneovimplugins.url = "github:NixNeovim/NixNeovimPlugins";
+    nixneovimplugins.url = "github:NixNeovim/NixNeovimPlugins/5e3cf6c150d6e0709b04d333afe691551a9e58a6";
     home-manager = {
       url = "github:nix-community/home-manager/release-25.11";
       # The `follows` keyword in inputs is used for inheritance.
