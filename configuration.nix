@@ -133,7 +133,7 @@
   programs.zsh.ohMyZsh = {
     enable = true;
     custom = "$HOME/.oh-my-zsh/custom/";
-    theme = "powerlevel10k/powerlevel10k";
+    theme = "";
   };
   programs.dconf.enable = true;
   programs.dconf.profiles.user.databases = [
