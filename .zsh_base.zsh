@@ -9,9 +9,9 @@ TERM_EMULATOR=$(ps -h -o comm -p $PPID)
 # ░█░█░█▀▀░█░█░█▀▀░█▀▀░░█░░█░░░█▀█
 # ░▀░▀░▀▀▀░▀▀▀░▀░░░▀▀▀░░▀░░▀▀▀░▀░▀
 
+# Terminal-specific settings
 if [[ "$TERM_EMULATOR" == *"kitty"* ]];
 then
-	fastfetch
 	export TERM="xterm-kitty"
   alias view="kitty +kitten icat"
   alias ssh='kitten ssh'
@@ -20,16 +20,21 @@ then
 elif [[  "$TERM_EMULATOR" == *"tmux"*  ]] || [[ "$TERM_EMULATOR" == "login" ]];
 	then
 	export TERM="xterm-256color"
-	fastfetch
 
 elif [[ "$TERM" == *"xterm-ghostty"* ]];
   then
   export TERM="xterm-ghostty"
-  fastfetch
 else
 	export TERM="xterm-256color"
-	fastfetch
 fi
+
+# Run fastfetch after shell is fully initialized (avoids color issues with p10k instant prompt)
+function _run_fastfetch_once() {
+  fastfetch
+  add-zsh-hook -d precmd _run_fastfetch_once
+}
+autoload -Uz add-zsh-hook
+add-zsh-hook precmd _run_fastfetch_once
 
 # ░▀▀█░█▀▀░█░█░░░█▀▀░█▀█░█▀█░█▀▀░▀█▀░█▀▀
 # ░▄▀░░▀▀█░█▀█░░░█░░░█░█░█░█░█▀▀░░█░░█░█
