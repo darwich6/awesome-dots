@@ -16,8 +16,8 @@
     colorMoved = default
 
 [user]
-	name = #TODO
-	email = #TODO
+	name = Ahmed Darwich
+	email = ahmed@planetscale.com
     signingkey = #TODO
 [init]
 	defaultBranch = main

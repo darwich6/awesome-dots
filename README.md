@@ -1,6 +1,6 @@
 # Dotfiles
 
-A working collection of dotfiles as I try to navigate the world of Linux. Currently using NixOS.
+A working collection of dotfiles as I try to navigate the world of Linux. Currently using NixOS, need to update build for MacOS
 
 ## Featuring  
 
