@@ -11,7 +11,7 @@ TERM_EMULATOR=$(ps -h -o comm -p $PPID)
 
 if [[ "$TERM_EMULATOR" == *"kitty"* ]];
 then
-	neofetch
+	fastfetch
 	export TERM="xterm-kitty"
   alias view="kitty +kitten icat"
   alias ssh='kitten ssh'
@@ -20,15 +20,15 @@ then
 elif [[  "$TERM_EMULATOR" == *"tmux"*  ]] || [[ "$TERM_EMULATOR" == "login" ]];
 	then
 	export TERM="xterm-256color"
-	neofetch --backend 'w3m'
+	fastfetch
 
 elif [[ "$TERM" == *"xterm-ghostty"* ]];
   then
   export TERM="xterm-ghostty"
-  neofetch
+  fastfetch
 else
 	export TERM="xterm-256color"
-	neofetch --backend 'w3m'
+	fastfetch
 fi
 
 # ░▀▀█░█▀▀░█░█░░░█▀▀░█▀█░█▀█░█▀▀░▀█▀░█▀▀
