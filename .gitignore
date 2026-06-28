@@ -11,6 +11,8 @@
 !justfile
 !cloc
 !.zsh_base.zsh
+!.p10k.zsh
+!.aliases.zsh
 !gitconfig
 !.zprofile
 !.skhdrc
