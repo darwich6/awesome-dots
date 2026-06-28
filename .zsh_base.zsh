@@ -28,13 +28,6 @@ else
 	export TERM="xterm-256color"
 fi
 
-# Run fastfetch after shell is fully initialized (avoids color issues with p10k instant prompt)
-function _run_fastfetch_once() {
-  fastfetch
-  add-zsh-hook -d precmd _run_fastfetch_once
-}
-autoload -Uz add-zsh-hook
-add-zsh-hook precmd _run_fastfetch_once
 
 # ░▀▀█░█▀▀░█░█░░░█▀▀░█▀█░█▀█░█▀▀░▀█▀░█▀▀
 # ░▄▀░░▀▀█░█▀█░░░█░░░█░█░█░█░█▀▀░░█░░█░█
@@ -287,3 +280,10 @@ add-zsh-hook precmd automatically_activate_python_venv
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+# ░█▀▀░█▀█░█▀▀░▀█▀░█▀▀░█▀▀░▀█▀░█▀▀░█░█
+# ░█▀▀░█▀█░▀▀█░░█░░█▀▀░█▀▀░░█░░█░░░█▀█
+# ░▀░░░▀░▀░▀▀▀░░▀░░▀░░░▀▀▀░░▀░░▀▀▀░▀░▀
+
+# Run fastfetch after everything is loaded
+fastfetch
