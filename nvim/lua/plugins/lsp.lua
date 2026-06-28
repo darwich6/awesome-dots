@@ -2,10 +2,10 @@ return {
   "neovim/nvim-lspconfig",
   event = { "BufReadPre", "BufNewFile" },
   config = function()
-    local lspconfig = require("lspconfig")
+    -- Use new vim.lsp.enable API (Neovim 0.11+)
     local servers = { "lua_ls", "pyright", "gopls", "ts_ls", "bashls", "yamlls", "dockerls" }
     for _, server in ipairs(servers) do
-      lspconfig[server].setup({})
+      vim.lsp.enable(server)
     end
     -- Show diagnostics on hover
     vim.api.nvim_create_autocmd("CursorHold", {
