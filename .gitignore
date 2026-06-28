@@ -13,6 +13,7 @@
 !.zsh_base.zsh
 !.p10k.zsh
 !.aliases.zsh
+!.zshrc
 !gitconfig
 !.zprofile
 !.skhdrc
