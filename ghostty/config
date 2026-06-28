@@ -5,7 +5,7 @@ font-family = Hack Nerd Font
 font-size = 14
 
 # Theme
-theme = dracula
+theme = Dracula (resources)
 
 # Window
 window-padding-x = 8
