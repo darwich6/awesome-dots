@@ -1,0 +1,18 @@
+# Ghostty Configuration
+
+# Font
+font-family = Hack Nerd Font
+font-size = 14
+
+# Theme
+theme = Dracula
+
+# Window
+window-padding-x = 8
+window-padding-y = 8
+
+# Cursor
+cursor-style = block
+
+# Shell integration
+shell-integration = zsh
