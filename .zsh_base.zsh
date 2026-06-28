@@ -286,5 +286,4 @@ add-zsh-hook precmd automatically_activate_python_venv
 # ░▀░░░▀░▀░▀▀▀░░▀░░▀░░░▀▀▀░░▀░░▀▀▀░▀░▀
 
 # Run fastfetch after everything is loaded
-# Use a tiny async delay to ensure terminal colors are fully initialized
-(sleep 0.01 && fastfetch) &!
+fastfetch
