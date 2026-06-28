@@ -1,11 +1,4 @@
-return {
-  "nvim-treesitter/nvim-treesitter",
-  build = ":TSUpdate",
-  event = { "BufReadPost", "BufNewFile" },
-  main = "nvim-treesitter.configs",
-  opts = {
-    ensure_installed = { "lua", "vim", "vimdoc", "go", "typescript", "javascript", "python", "bash", "yaml", "json", "markdown" },
-    highlight = { enable = true },
-    indent = { enable = true },
-  },
-}
+-- nvim-treesitter was archived in April 2026
+-- Neovim 0.10+ has built-in treesitter with automatic parser installation
+-- No external plugin needed
+return {}
