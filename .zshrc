@@ -1,1 +1,1 @@
-source ~/.zsh_base.zsh
+source ~/github/awesome-dots/.zsh_base.zsh
