@@ -43,7 +43,8 @@
 
   # Bootloader.
   boot.loader.systemd-boot.enable = false;
-  boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader.efi.canTouchEfiVariables = false;
+  boot.loader.grub.efiInstallAsRemovable = true;
   boot.loader.grub.efiSupport = true;
   boot.loader.grub.device = "nodev";
   boot.loader.grub.enable = true;
@@ -102,7 +103,10 @@
   };
 
   # Docker env
-  virtualisation.docker.enable = true;
+  virtualisation.docker = {
+	enable = true;
+	package = pkgs.docker_29;
+  };
 
   # Programs
   programs.waybar.enable = true;
@@ -227,7 +231,7 @@
     fzf
     fd
     gnugrep
-    neofetch
+    fastfetch
     hyprshot
     hyprpicker
     swaynotificationcenter
@@ -249,7 +253,7 @@
     delta
     wl-clipboard
     hyprpaper
-    code-cursor
+    claude-code
   ];
   environment.sessionVariables = {
     NIXOS_OZONE_WL = "1";
