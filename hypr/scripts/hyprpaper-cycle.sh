@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -uo pipefail
 
-DIR="/home/ahmed/Pictures/wallpapers"
+DIR="FILE LOCATION OF WALLPAPERS"
 INTERVAL=900
 MON1="DP-2"
 MON2="DP-1"
