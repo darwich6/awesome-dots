@@ -1,6 +1,5 @@
 [core]
     pager = delta
-	excludesfile = /home/ahmed/.gitignore
 	compression = 0
 [interactive]
     diffFilter = delta --color-only
@@ -15,22 +14,14 @@
 [diff]
     colorMoved = default
 
-[user]
-	name = Ahmed Darwich
-	email = ahmed@planetscale.com
-    signingkey = #TODO
 [init]
 	defaultBranch = main
-[gpg]
-	format = ssh
-[commit]
-	gpgsign = true
-[tag]
-	gpgSign = true
-[gpg "ssh"]
-	allowedSignersFile = #TODO
 [alias]
     # Adds worktree to .worktrees folder
     wt = "!git worktree add .worktrees/$1 $1 #"
 [pull]
 	rebase = true
+
+# Machine identity, signing and credentials stay outside the repository.
+[include]
+    path = ~/.gitconfig.local

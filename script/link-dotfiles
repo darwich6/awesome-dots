@@ -1,0 +1,62 @@
+#!/usr/bin/env python3
+"""Link live dotfiles; default is a read-only preview. Existing files are backed up."""
+import argparse
+from datetime import datetime
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+
+REPO = Path(__file__).resolve().parent.parent
+
+def git_keys(path):
+    result = subprocess.run(['git', 'config', '--file', str(path), '--name-only', '--list'], check=True, text=True, capture_output=True)
+    return result.stdout.splitlines()
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--apply', action='store_true')
+    parser.add_argument('--git-only', action='store_true', help='Migrate Git before NixOS Home Manager activation')
+    parser.add_argument('--target-home', type=Path, default=Path.home(), help=argparse.SUPPRESS)
+    args = parser.parse_args()
+    home = args.target_home.resolve()
+    if sys.platform != 'darwin' and not args.git_only:
+        parser.error('On NixOS use dotfiles.nix; run this with --git-only to preserve existing Git identity first.')
+    targets = {'gitconfig': '.gitconfig'}
+    if not args.git_only:
+        targets.update({'nvim': '.config/nvim', 'ghostty/config': '.config/ghostty/config',
+                        '.zshrc': '.zshrc', '.aliases.zsh': '.aliases.zsh', '.p10k.zsh': '.p10k.zsh'})
+        for name in ['settings.json', 'keybindings.json', 'extensions', 'skills', 'prompts', 'themes']:
+            targets['pi/' + name] = '.pi/agent/' + name
+    pending = [(REPO / source, home / dest) for source, dest in targets.items()
+               if not (home / dest).is_symlink() or (home / dest).resolve() != (REPO / source).resolve()]
+    for source, dest in pending:
+        if not source.exists(): raise RuntimeError(f'Missing source: {source}')
+        print(f'{dest} -> {source}')
+    if not args.apply:
+        print('Preview only. Re-run with --apply to create links and back up replaced files.')
+        return
+    gitfile, local = home / '.gitconfig', home / '.gitconfig.local'
+    migrate = any(dest == gitfile for _, dest in pending) and gitfile.exists()
+    if migrate and local.exists():
+        raise RuntimeError('Both .gitconfig and .gitconfig.local exist. Merge local identity settings before replacing .gitconfig; no files changed.')
+    backup = home / '.local/state/awesome-dots/backups' / datetime.now().strftime('%Y%m%d-%H%M%S-%f')
+    if migrate:
+        # Copy current settings before linking; strip only the preferences now shared.
+        shutil.copy2(gitfile, local)
+        local.chmod(0o600)
+        for key in set(git_keys(REPO / 'gitconfig')):
+            if key.startswith('include'): continue
+            result = subprocess.run(['git', 'config', '--file', str(local), '--unset-all', key], capture_output=True)
+            if result.returncode not in (0, 5): raise RuntimeError(f'Unable to migrate Git key {key}')
+    for source, dest in pending:
+        if dest.exists() or dest.is_symlink():
+            saved = backup / dest.relative_to(home)
+            saved.parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(str(dest), str(saved))
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.symlink_to(source, target_is_directory=source.is_dir())
+    if backup.exists(): print(f'Backups: {backup}')
+    print('Live links ready.' if pending else 'All links already point to this checkout.')
+
+if __name__ == '__main__': main()

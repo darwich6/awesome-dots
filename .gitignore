@@ -5,6 +5,10 @@
 !kitty
 !nvim
 !README.md
+!Brewfile.nvim
+!Brewfile.pi
+!pi
+!script
 !picom
 !rofi
 !.gitignore
@@ -30,5 +34,10 @@
 *.lck
 nvim/plugin
 nvim/spell
-nvim/lazy-lock.json
 awesome/artwork
+# Runtime data and credentials never belong in shared Pi configuration.
+pi/auth.json
+pi/sessions/
+pi/models-store.json
+pi/trust.json
+pi/*.lock

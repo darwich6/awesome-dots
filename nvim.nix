@@ -1,114 +1,38 @@
 { inputs, ... }:
 {
-  home-manager.users.ahmed =
-    { pkgs, ... }:
-    {
-      nixpkgs.overlays = [
-        inputs.nixneovimplugins.overlays.default
+  home-manager.users.ahmed = { config, pkgs, ... }: {
+    nixpkgs.overlays = [ inputs.nixneovimplugins.overlays.default ];
+    programs.neovim = {
+      enable = true;
+      defaultEditor = true;
+      extraPackages = with pkgs; [
+        ripgrep fd
+        typescript typescript-language-server
+        dockerfile-language-server yaml-language-server bash-language-server
+        vscode-langservers-extracted
+        nodePackages.prettier stylua black pyright
+        nixd nixfmt-rfc-style lua-language-server gopls
       ];
-
-      programs.neovim = {
-        enable = true;
-        extraPackages = with pkgs; [
-          typescript
-          typescript-language-server
-          dockerfile-language-server
-          yaml-language-server
-          bash-language-server
-          prettierd
-          nodePackages.prettier
-          stylua
-          nixd
-          nixfmt-rfc-style
-          lua-language-server
-          gopls
-        ];
-        extraLuaConfig =
-          builtins.readFile ./nvim/options.lua + builtins.readFile ./nvim/keymap.lua;
-        plugins = with pkgs.vimPlugins; [
-          plenary-nvim
-          nui-nvim
-          vim-suda
-          telescope-nvim
-          nvim-web-devicons
-          vim-just
-          {
-            plugin = pkgs.vimExtraPlugins.possession-nvim-jedrzejboczar;
-            type = "lua";
-            config = builtins.readFile ./nvim/plugins/possession.lua;
-          }
-          {
-            plugin = nvim-autopairs;
-            type = "lua";
-            config = builtins.readFile ./nvim/plugins/auto-pairs.lua;
-          }
-          {
-            plugin = nvim-surround;
-            type = "lua";
-            config = builtins.readFile ./nvim/plugins/nvim-surround.lua;
-          }
-          {
-            plugin = nvim-lint;
-            type = "lua";
-            config = builtins.readFile ./nvim/plugins/vim-lint.lua;
-          }
-          {
-            plugin = neo-tree-nvim;
-            type = "lua";
-            config = builtins.readFile ./nvim/plugins/neo-tree.lua;
-          }
-          {
-            plugin = lualine-nvim;
-            type = "lua";
-            config = builtins.readFile ./nvim/plugins/lualine.lua;
-          }
-          {
-            plugin = indent-blankline-nvim;
-
-            type = "lua";
-            config = builtins.readFile ./nvim/plugins/indent-blankline.lua;
-          }
-          {
-            plugin = blink-cmp;
-            type = "lua";
-            config = builtins.readFile ./nvim/plugins/cmp.lua;
-          }
-          {
-            plugin = go-nvim;
-            type = "lua";
-            config = builtins.readFile ./nvim/plugins/go.lua;
-          }
-          {
-            plugin = gitsigns-nvim;
-            type = "lua";
-            config = builtins.readFile ./nvim/plugins/gitsigns.lua;
-          }
-          {
-            plugin = dracula-nvim;
-            type = "lua";
-            config = builtins.readFile ./nvim/plugins/dracula.lua;
-          }
-          {
-            plugin = alpha-nvim;
-            type = "lua";
-            config = builtins.readFile ./nvim/plugins/alpha-nvim.lua;
-          }
-          {
-            plugin = nvim-treesitter.withAllGrammars;
-            type = "lua";
-            config = builtins.readFile ./nvim/plugins/nvim-treesitter.lua;
-          }
-          {
-            plugin = conform-nvim;
-            type = "lua";
-            config = builtins.readFile ./nvim/plugins/conform.lua;
-          }
-          {
-            plugin = nvim-lspconfig;
-            type = "lua";
-            config = builtins.readFile ./nvim/plugins/lsp.lua;
-          }
-        ];
-      };
+      extraLuaConfig = ''
+        -- Home Manager supplies plugin paths; settings are live checkout symlinks.
+        local root = vim.fn.stdpath("config")
+        dofile(root .. "/options.lua")
+        dofile(root .. "/keymap.lua")
+        require("platform_nix")
+      '';
+      plugins = with pkgs.vimPlugins; [
+        plenary-nvim nui-nvim vim-suda telescope-nvim nvim-web-devicons vim-just
+        nvim-autopairs nvim-surround neo-tree-nvim lualine-nvim
+        indent-blankline-nvim blink-cmp go-nvim gitsigns-nvim dracula-nvim
+        alpha-nvim conform-nvim nvim-lspconfig which-key-nvim
+        # Nix provides matching parsers/queries; shared code uses native highlighting.
+        nvim-treesitter.withAllGrammars
+        {
+          plugin = pkgs.vimExtraPlugins.possession-nvim-jedrzejboczar;
+          type = "lua";
+          config = ''dofile(vim.fn.stdpath("config") .. "/plugins/possession.lua")'';
+        }
+      ];
     };
+  };
 }

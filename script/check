@@ -1,0 +1,151 @@
+#!/usr/bin/env python3
+"""Check dotfile syntax, installed tools and live symlinks without changing them."""
+import argparse
+import ast
+import json
+from pathlib import Path
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+
+REPO = Path(__file__).resolve().parent.parent
+failures = []
+skips = []
+
+
+def report(kind, label):
+    print(f'{kind}: {label}')
+    if kind == 'FAIL': failures.append(label)
+    if kind == 'SKIP': skips.append(label)
+
+
+def run(label, argv, cwd=REPO):
+    try:
+        result = subprocess.run(argv, cwd=cwd, capture_output=True, text=True, timeout=45)
+        report('PASS' if result.returncode == 0 else 'FAIL', label)
+        if result.returncode:
+            print((result.stderr or result.stdout).strip())
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        report('FAIL', f'{label}: {exc}')
+
+
+def syntax():
+    for name in ['pi/settings.json', 'pi/keybindings.json', 'nvim/lazy-lock.json', 'flake.lock']:
+        path = REPO / name
+        if not path.exists():
+            report('SKIP' if name == 'flake.lock' else 'FAIL', f'{name} missing' +
+                   ('; generate and commit it on the Nix machine' if name == 'flake.lock' else ''))
+            continue
+        try:
+            json.loads(path.read_text())
+            report('PASS', f'{name} JSON syntax')
+        except (ValueError, OSError) as exc:
+            report('FAIL', f'{name}: {exc}')
+    python_files = list((REPO / 'script').iterdir()) + list((REPO / 'waybar').rglob('*.py'))
+    for path in python_files:
+        if not path.is_file(): continue
+        source = path.read_text()
+        if path.suffix != '.py' and 'python' not in source.splitlines()[0]: continue
+        try:
+            ast.parse(source, filename=str(path))
+            report('PASS', f'{path.relative_to(REPO)} Python syntax')
+        except SyntaxError as exc:
+            report('FAIL', str(exc))
+    if shutil.which('zsh'):
+        run('Zsh syntax', ['zsh', '-n', str(REPO / '.zshrc')])
+        for name in ['.zsh_base.zsh', '.aliases.zsh', '.p10k.zsh']:
+            run(f'{name} syntax', ['zsh', '-n', str(REPO / name)])
+    else:
+        report('SKIP', 'Zsh syntax: zsh unavailable')
+    for path in (REPO / 'hypr').rglob('*.sh'):
+        run(f'{path.relative_to(REPO)} syntax', ['bash', '-n', str(path)])
+    if shutil.which('git'):
+        run('Git config syntax', ['git', 'config', '--file', str(REPO / 'gitconfig'), '--no-includes', '--list'])
+        run('Diff whitespace', ['git', 'diff', '--check'])
+    else:
+        report('SKIP', 'Git checks: git unavailable')
+    if shutil.which('nix-instantiate'):
+        for path in sorted(REPO.glob('*.nix')):
+            run(f'{path.name} Nix syntax (not evaluation/build)', ['nix-instantiate', '--parse', str(path)])
+    else:
+        report('SKIP', 'Nix syntax/evaluation/build: Nix unavailable')
+
+
+def neovim(repo_only):
+    if not shutil.which('nvim'):
+        report('FAIL', 'Neovim unavailable; cannot check Lua or editor tools')
+        return
+    files = [str(p) for p in (REPO / 'nvim').rglob('*.lua')]
+    commands = [] if repo_only else [
+        'rg', 'fd', 'lua-language-server', 'pyright-langserver', 'gopls',
+        'typescript-language-server', 'bash-language-server', 'yaml-language-server',
+        'docker-langserver', 'vscode-eslint-language-server', 'stylua', 'black', 'prettier',
+    ]
+    if not repo_only and Path('/etc/NIXOS').exists(): commands += ['nixd', 'nixfmt']
+    if not repo_only and sys.platform == 'darwin': commands += ['tree-sitter']
+    # Loadfile compiles Lua without executing config, plugins, downloads or LSPs.
+    # Running the installed nvim wrapper also sees Nix's editor-only PATH additions.
+    script = '''local files = vim.json.decode([==[%s]==])
+local commands = vim.json.decode([==[%s]==])
+local errors = {}
+for _, file in ipairs(files) do
+  local fn, err = loadfile(file)
+  if not fn then table.insert(errors, err) end
+end
+for _, command in ipairs(commands) do
+  if vim.fn.executable(command) ~= 1 then table.insert(errors, "Missing tool: " .. command) end
+end
+if #errors > 0 then error(table.concat(errors, "\\n")) end
+''' % (json.dumps(files), json.dumps(commands))
+    with tempfile.TemporaryDirectory(prefix='awesome-dots-check-') as temp:
+        path = Path(temp) / 'check.lua'
+        path.write_text(script)
+        run('Lua syntax' + ('' if repo_only else ' and editor tool availability'),
+            ['nvim', '--headless', '-u', 'NONE', '-i', 'NONE', '-n', '-l', str(path)])
+
+
+def links():
+    if sys.platform == 'darwin':
+        expected = {'.config/nvim': 'nvim', '.config/ghostty/config': 'ghostty/config',
+                    '.zshrc': '.zshrc', '.aliases.zsh': '.aliases.zsh',
+                    '.p10k.zsh': '.p10k.zsh', '.gitconfig': 'gitconfig'}
+        expected.update({'.pi/agent/' + n: 'pi/' + n for n in
+                         ['settings.json', 'keybindings.json', 'extensions', 'skills', 'prompts', 'themes']})
+    elif Path('/etc/NIXOS').exists():
+        # Read the literal link declarations, so additions to dotfiles.nix are checked too.
+        source = (REPO / 'dotfiles.nix').read_text()
+        home, xdg = source.split('      xdg.configFile = {', 1)
+        pattern = r'"([^"\n]+)"\.source = link "([^"\n]+)";'
+        expected = dict(re.findall(pattern, home))
+        expected.update({'.config/' + k: v for k, v in re.findall(pattern, xdg)})
+    else:
+        report('SKIP', 'Live links: supported on macOS or NixOS only')
+        return
+    for destination, relative in expected.items():
+        path = Path.home() / destination
+        try:
+            good = path.is_symlink() and path.resolve(strict=True) == (REPO / relative).resolve(strict=True)
+        except (OSError, RuntimeError): good = False
+        report('PASS' if good else 'FAIL', f'~/{destination} -> {relative}')
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--repo-only', action='store_true', help='Skip machine links and runtime tool checks')
+    args = parser.parse_args()
+    syntax()
+    neovim(args.repo_only)
+    if not args.repo_only:
+        links()
+        if shutil.which('pi'): run('Pi CLI starts', ['pi', '--version'])
+        else: report('FAIL', 'Pi unavailable')
+        if shutil.which('ghostty'): run('Ghostty active configuration', ['ghostty', '+validate-config'])
+        else: report('FAIL', 'Ghostty unavailable')
+    print(f'\n{len(failures)} failed; {len(skips)} skipped.')
+    print('Syntax/tool checks do not validate Nix builds, desktop behavior, or authenticated Pi/LSP requests.')
+    return 1 if failures else 0
+
+
+if __name__ == '__main__': sys.exit(main())

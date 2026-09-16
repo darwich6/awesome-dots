@@ -2,6 +2,8 @@
   description = "Homepc Config";
 
   inputs = {
+    # Pi is not packaged in 25.11. Only Pi uses this input; pin with flake.lock.
+    nixpkgs-pi.url = "github:NixOS/nixpkgs/nixos-unstable";
     # NixOS official package source, using the nixos-25.11 branch here
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
     grub2-themes.url = "github:vinceliuice/grub2-themes";
@@ -34,6 +36,8 @@
           home-manager.nixosModules.home-manager
           ./configuration.nix
           ./nvim.nix
+          ./dotfiles.nix
+          ./pi.nix
         ];
       };
     };

@@ -40,8 +40,8 @@ nnoremap("<leader>ra", ":%s/")
 
 -- LSP
 nnoremap("<leader>e", vim.diagnostic.open_float)
-nnoremap("[d", vim.diagnostic.goto_prev)
-nnoremap("]d", vim.diagnostic.goto_next)
+nnoremap("[d", function() vim.diagnostic.jump({ count = -1, float = true }) end)
+nnoremap("]d", function() vim.diagnostic.jump({ count = 1, float = true }) end)
 nnoremap("<leader>q", vim.diagnostic.setloclist)
 
 -- Use LspAttach autocommand to only map the following keys
@@ -65,9 +65,10 @@ vim.api.nvim_create_autocmd("LspAttach", {
     vim.keymap.set("n", "<leader>D", vim.lsp.buf.type_definition, opts)
     vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
     vim.keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, opts)
-    vim.keymap.set("n", "<leader>fc", function()
-      require("conform").format()
-      vim.lsp.buf.format({ async = false })
-    end, opts)
   end,
 })
+
+-- Formatting also works in buffers without a language server.
+vim.keymap.set({ "n", "v" }, "<leader>fc", function()
+  require("conform").format({ lsp_format = "fallback", timeout_ms = 2000 })
+end, { desc = "Format buffer or selection" })

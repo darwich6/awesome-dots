@@ -1,9 +1,13 @@
+local editing = require("shared.editing")
 -- Editing enhancements
 return {
-  { "windwp/nvim-autopairs", event = "InsertEnter", opts = {} },
-  { "kylechui/nvim-surround", event = "VeryLazy", opts = {} },
-  { "lukas-reineke/indent-blankline.nvim", main = "ibl", event = { "BufReadPost", "BufNewFile" },
-    opts = { debounce = 50, scope = { show_start = false, show_end = false } } },
-  { "lewis6991/gitsigns.nvim", event = { "BufReadPre", "BufNewFile" },
-    config = function() require("gitsigns").setup(); vim.cmd("Gitsigns toggle_current_line_blame") end },
+  { "windwp/nvim-autopairs", event = "InsertEnter", opts = editing.autopairs },
+  { "kylechui/nvim-surround", event = "VeryLazy", opts = editing.surround },
+  {
+    "lukas-reineke/indent-blankline.nvim",
+    main = "ibl",
+    event = { "BufReadPost", "BufNewFile" },
+    opts = editing.indent,
+  },
+  { "lewis6991/gitsigns.nvim", event = { "BufReadPre", "BufNewFile" }, opts = editing.gitsigns },
 }

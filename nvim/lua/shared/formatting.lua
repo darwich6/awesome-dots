@@ -1,0 +1,20 @@
+return {
+  default_format_opts = { lsp_format = "fallback" },
+  format_on_save = { timeout_ms = 2000, lsp_format = "fallback" },
+  formatters_by_ft = {
+    nix = { "nixfmt" },
+    lua = { "stylua" },
+    python = { "black" },
+    typescript = { "prettier" },
+    javascript = { "prettier" },
+    typescriptreact = { "prettier" },
+    javascriptreact = { "prettier" },
+    json = { "prettier" },
+    jsonc = { "prettier" },
+    css = { "prettier" },
+    html = { "prettier" },
+    yaml = { "prettier" },
+    markdown = { "prettier" },
+    mdx = { "prettier" },
+  },
+}
