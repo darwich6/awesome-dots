@@ -4,6 +4,8 @@
   inputs = {
     # Pi is not packaged in 25.11. Only Pi uses this input; pin with flake.lock.
     nixpkgs-pi.url = "github:NixOS/nixpkgs/nixos-unstable";
+    # Used to pull individual fast-moving packages (e.g. claude-code) from unstable.
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
     # NixOS official package source, using the nixos-25.11 branch here
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
     grub2-themes.url = "github:vinceliuice/grub2-themes";

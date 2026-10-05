@@ -191,7 +191,15 @@
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
-  environment.systemPackages = with pkgs; [
+  environment.systemPackages =
+    let
+      pkgs-unstable = import inputs.nixpkgs-unstable {
+        inherit (pkgs.stdenv.hostPlatform) system;
+        config.allowUnfree = true;
+      };
+    in
+    with pkgs;
+    [
     spotify
     discord
     vim
@@ -253,7 +261,7 @@
     delta
     wl-clipboard
     hyprpaper
-    claude-code
+    pkgs-unstable.claude-code
   ];
   environment.sessionVariables = {
     NIXOS_OZONE_WL = "1";
