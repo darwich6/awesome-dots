@@ -287,3 +287,6 @@ add-zsh-hook precmd automatically_activate_python_venv
 
 # Run fastfetch after everything is loaded
 fastfetch
+
+# mise version manager
+eval "$(mise activate zsh)"
